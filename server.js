@@ -1,4 +1,3 @@
-require('dotenv').config();
 const express = require('express');
 const mysql = require('mysql2');
 const cors = require('cors');
@@ -9,36 +8,28 @@ const path = require('path');
 const fs = require('fs');
 
 const app = express();
-const PORT = process.env.PORT || 3000; 
-const JWT_SECRET = process.env.JWT_SECRET || 'SECRET_KEY';
-
 app.use(cors());
 app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
 
-const UPLOAD_DIR = process.env.UPLOAD_DIR || path.join(__dirname, 'uploads');
-if (!fs.existsSync(UPLOAD_DIR)) fs.mkdirSync(UPLOAD_DIR, { recursive: true });
-app.use('/uploads', express.static(UPLOAD_DIR));
+// Ensure uploads folder exists
+if (!fs.existsSync('uploads')) fs.mkdirSync('uploads');
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
+// Connect to YOUR local MySQL database
+const db = mysql.createConnection({
+    host: 'localhost',
+    user: 'root',
+    password: 'Kamogelo#2003', // YOUR LOCAL MYSQL PASSWORD
+    database: 'eduvos_marketplace'
+});
+const dbPromise = db.promise();
+
+// Multer storage for image uploads
 const storage = multer.diskStorage({
-    destination: (req, file, cb) => cb(null, UPLOAD_DIR),
+    destination: (req, file, cb) => cb(null, 'uploads/'),
     filename: (req, file, cb) => cb(null, Date.now() + path.extname(file.originalname))
 });
 const upload = multer({ storage });
-
-const dbConfig = {
-    host: process.env.DB_HOST || 'localhost',
-    port: Number(process.env.DB_PORT) || 3306,
-    user: process.env.DB_USER || 'root',
-    password: process.env.DB_PASSWORD || '',
-    database: process.env.DB_NAME || 'eduvos_marketplace',
-    waitForConnections: true,
-    connectionLimit: 10,
-    queueLimit: 0
-};
-if (process.env.DB_SSL === 'true') dbConfig.ssl = { rejectUnauthorized: false };
-
-const dbPromise = mysql.createPool(dbConfig).promise();
 
 // --- AUTH ---
 app.post('/api/signup', async (req, res) => {
@@ -62,7 +53,7 @@ app.post('/api/login', async (req, res) => {
         const user = results[0];
         const match = await bcrypt.compare(password, user.password);
         if (match) {
-            const token = jwt.sign({ id: user.id }, JWT_SECRET, { expiresIn: '24h' });
+            const token = jwt.sign({ id: user.id }, 'SECRET_KEY', { expiresIn: '24h' });
             res.json({ token, userId: user.id, firstName: user.first_name, role: user.role });
         } else { res.status(401).json({ message: "Incorrect password." }); }
     } catch (error) { res.status(500).json({ message: error.message }); }
@@ -202,13 +193,19 @@ app.put('/api/notifications/:userId/read', async (req, res) => {
     res.json({ success: true });
 });
 
-// --- STATIC FILES & ROUTING ---
+// --- SERVE STATIC FILES ---
 app.use(express.static(__dirname));
 app.get('*', (req, res, next) => {
     if (req.path.startsWith('/api/') || req.path.startsWith('/uploads/')) return next();
     res.sendFile(path.join(__dirname, 'index.html'));
 });
 
-app.listen(PORT, '0.0.0.0', () => {
-    console.log(`✅ Eduvos Marketplace running on port ${PORT}`);
+// START SERVER
+db.connect((err) => {
+    if (err) {
+        console.error('❌ Failed to connect to database:', err.message);
+        process.exit(1); 
+    }
+    console.log('✅ Connected to database: eduvos_marketplace');
+    app.listen(3000, '0.0.0.0', () => console.log('✅ Server running on port 3000'));
 });
