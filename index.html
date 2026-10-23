@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Eduvos Marketplace - Auth</title>
+    <link rel="stylesheet" href="css/index.css">
+    <style>
+        .role-select { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px; font-size: 14px; background: #fff; outline: none; cursor: pointer; margin-bottom: 10px; }
+        .form-box { display: none; }
+        .form-box.active { display: block; }
+        .btn-submit { width: 100%; padding: 14px; border: none; border-radius: 8px; color: white; background: #0062e9; font-weight: 600; cursor: pointer; margin-top: 10px; }
+        
+        /* Language Selector */
+        .language-selector { position: relative; cursor: pointer; display: flex; justify-content: flex-end; margin-bottom: 10px; }
+        .lang-selected { display: flex; align-items: center; gap: 6px; font-size: 14px; font-weight: 500; color: #111827; padding: 6px 12px; border: 1px solid #e2e8f0; border-radius: 20px; background: white; }
+        .language-dropdown { position: absolute; top: 100%; right: 0; background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); list-style: none; padding: 6px 0; margin-top: 8px; min-width: 130px; opacity: 0; visibility: hidden; transform: translateY(-10px); transition: all 0.2s ease; z-index: 50; }
+        .language-selector.active .language-dropdown { opacity: 1; visibility: visible; transform: translateY(0); }
+        .language-dropdown li { padding: 10px 16px; font-size: 14px; color: #333; transition: 0.2s; cursor: pointer; }
+        .language-dropdown li:hover { background: #f3f4f6; color: #0062e9; }
+    </style>
+</head>
+<body>
+    <div class="auth-container">
+        <!-- Left Side: Video & Branding -->
+        <div class="auth-left">
+            <video class="banner-video" autoplay muted loop playsinline>
+                <source src="pictures/vision.mp4" type="video/mp4">
+            </video>
+            <div class="video-overlay"></div>
+            <div class="branding-content">
+                <div class="logo"><span class="logo-icon">E</span><span class="logo-text">duvos Marketplace</span></div>
+                <h1 data-i18n="branding-title">Buy, Sell & Discover on Campus</h1>
+            </div>
+        </div>
+
+        <!-- Right Side: Forms -->
+        <div class="auth-right">
+            <div class="form-wrapper">
+                
+                <!-- Language Selector -->
+                <div class="language-selector" id="language-selector">
+                    <div class="lang-selected">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+                        <span id="current-lang-text">English</span>
+                    </div>
+                    <ul class="language-dropdown">
+                        <li data-lang="en">English</li>
+                        <li data-lang="af">Afrikaans</li>
+                        <li data-lang="zu">Zulu</li>
+                        <li data-lang="es">Español</li>
+                        <li data-lang="fr">Français</li>
+                        <li data-lang="de">Deutsch</li>
+                    </ul>
+                </div>
+
+                <!-- Login Form -->
+                <form id="login-form" class="form-box active">
+                    <h2 data-i18n="login-title">Welcome Back</h2>
+                    <div class="form-group"><label data-i18n="label-email">Email *</label><input type="email" id="login-email" required></div>
+                    <div class="form-group"><label data-i18n="label-password">Password *</label><input type="password" id="login-password" required></div>
+                    <div class="form-group"><label data-i18n="label-login-as">Log in as *</label>
+                        <select id="login-role" class="role-select" required>
+                            <option value="Buyer" data-i18n="role-buyer">Buyer</option>
+                            <option value="Seller" data-i18n="role-seller">Seller</option>
+                        </select>
+                    </div>
+                    <p id="login-error" style="color: red; display: none;"></p>
+                    <button type="submit" class="btn-submit" data-i18n="btn-login">Log In</button>
+                    <p style="text-align: center; margin-top: 15px;"><span data-i18n="toggle-login-text">Don't have an account?</span> <a href="#" id="go-to-signup" data-i18n="toggle-login-link">Sign up</a></p>
+                </form>
+
+                <!-- Signup Form -->
+                <form id="signup-form" class="form-box">
+                    <h2 data-i18n="signup-title">Create an Account</h2>
+                    <div style="display: flex; gap: 10px;">
+                        <div class="form-group" style="flex: 1;"><label data-i18n="label-fname">First name *</label><input type="text" id="signup-fname" required></div>
+                        <div class="form-group" style="flex: 1;"><label data-i18n="label-lname">Last name *</label><input type="text" id="signup-lname" required></div>
+                    </div>
+                    <div class="form-group"><label data-i18n="label-email">Email *</label><input type="email" id="signup-email" required></div>
+                    <div class="form-group"><label data-i18n="label-signup-as">Sign up as *</label>
+                        <select id="signup-role" class="role-select" required>
+                            <option value="Buyer" data-i18n="role-buyer">Buyer</option>
+                            <option value="Seller" data-i18n="role-seller">Seller</option>
+                        </select>
+                    </div>
+                    <div class="form-group"><label data-i18n="label-location">Location *</label>
+                        <select id="signup-location" class="role-select" required>
+                            <option value="Pretoria">Pretoria</option>
+                            <option value="Midrand">Midrand</option>
+                            <option value="Durban">Durban</option>
+                            <option value="Cape Town">Cape Town</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Gender *</label>
+                        <select id="signup-gender" class="role-select" required>
+                            <option value="Male">Male</option>
+                            <option value="Female">Female</option>
+                            <option value="Non-binary">Non-binary</option>
+                            <option value="Prefer not to say" selected>Prefer not to say</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group"><label data-i18n="label-password">Password *</label><input type="password" id="signup-password" required></div>
+                    <p id="signup-error" style="color: red; display: none;"></p>
+                    <button type="submit" class="btn-submit" data-i18n="btn-signup">Sign Up</button>
+                    <p style="text-align: center; margin-top: 15px;"><span data-i18n="toggle-signup-text">Already have an account?</span> <a href="#" id="go-to-login" data-i18n="toggle-signup-link">Log in</a></p>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Automatically detects localhost or local network IP (e.g., 192.168.1.5) for mobile testing
+        const API_BASE_URL = `http://${window.location.hostname}:3000/api`;
+        
+        document.getElementById('go-to-login').addEventListener('click', (e) => { e.preventDefault(); document.getElementById('signup-form').style.display = 'none'; document.getElementById('login-form').style.display = 'block'; });
+        document.getElementById('go-to-signup').addEventListener('click', (e) => { e.preventDefault(); document.getElementById('login-form').style.display = 'none'; document.getElementById('signup-form').style.display = 'block'; });
+
+        // --- SIGNUP LOGIC ---
+        document.getElementById('signup-form').addEventListener('submit', async (e) => {
+            e.preventDefault(); 
+            const errorBox = document.getElementById('signup-error');
+            errorBox.style.display = 'none'; 
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/signup`, {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        firstName: document.getElementById('signup-fname').value, 
+                        lastName: document.getElementById('signup-lname').value, 
+                        email: document.getElementById('signup-email').value, 
+                        password: document.getElementById('signup-password').value, 
+                        gender: document.getElementById('signup-gender').value,
+                        role: document.getElementById('signup-role').value, 
+                        location: document.getElementById('signup-location').value 
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) { 
+                    alert('Account created! Please log in.'); 
+                    document.getElementById('go-to-login').click(); 
+                    document.getElementById('signup-form').reset();
+                } else { 
+                    errorBox.textContent = data.message; 
+                    errorBox.style.display = 'block'; 
+                }
+            } catch (error) { 
+                errorBox.textContent = 'Server offline. Make sure the Node server is running.'; 
+                errorBox.style.display = 'block'; 
+            }
+        });
+
+        // --- LOGIN LOGIC ---
+        document.getElementById('login-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const errorBox = document.getElementById('login-error');
+            errorBox.style.display = 'none';
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/login`, {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        email: document.getElementById('login-email').value, 
+                        password: document.getElementById('login-password').value,
+                        role: document.getElementById('login-role').value 
+                    })
+                });
+                const data = await response.json();
+                
+                if (response.ok) { 
+                    executeLogin(data.firstName, data.token, data.role, data.userId); 
+                } else { 
+                    errorBox.textContent = data.message; 
+                    errorBox.style.display = 'block'; 
+                }
+            } catch (error) { 
+                errorBox.textContent = 'Cannot connect to server.'; 
+                errorBox.style.display = 'block'; 
+            }
+        });
+
+        // --- EXECUTE LOGIN & REDIRECT ---
+        function executeLogin(name, token, role, userId) {
+            localStorage.clear(); 
+            localStorage.setItem('userName', name);
+            localStorage.setItem('userRole', role); 
+            localStorage.setItem('userId', userId);
+            
+            if (role === 'seller') window.location.href = 'Seller/SellerUI.html'; 
+            else window.location.href = 'Buyer/BuyerUI.html'; 
+        }
+
+        /* ============================================================
+           LANGUAGE TRANSLATOR
+           ============================================================ */
+        const translations = {
+            'en': { 'branding-title': 'Buy, Sell & Discover on Campus', 'login-title': 'Welcome Back', 'label-email': 'Email *', 'label-password': 'Password *', 'label-login-as': 'Log in as *', 'role-buyer': 'Buyer', 'role-seller': 'Seller', 'btn-login': 'Log In', 'toggle-login-text': "Don't have an account?", 'toggle-login-link': 'Sign up', 'signup-title': 'Create an Account', 'label-fname': 'First name *', 'label-lname': 'Last name *', 'label-signup-as': 'Sign up as *', 'label-location': 'Location *', 'btn-signup': 'Sign Up', 'toggle-signup-text': 'Already have an account?', 'toggle-signup-link': 'Log in' },
+            'af': { 'branding-title': 'Koop, Verkoop & Ontdek op Kampus', 'login-title': 'Welkom Terug', 'label-email': 'E-pos *', 'label-password': 'Wagwoord *', 'label-login-as': 'Teken in as *', 'role-buyer': 'Koper', 'role-seller': 'Verkoper', 'btn-login': 'Teken In', 'toggle-login-text': "Het jy nie 'n rekening nie?", 'toggle-login-link': 'Teken aan', 'signup-title': "Skep 'n Rekening", 'label-fname': 'Voornaam *', 'label-lname': 'Van *', 'label-signup-as': 'Teken aan as *', 'label-location': 'Ligging *', 'btn-signup': 'Teken Aan', 'toggle-signup-text': "Het jy reeds 'n rekening?", 'toggle-signup-link': 'Teken in' },
+            'zu': { 'branding-title': 'Thenga, Dayisa futhi Uthole eKhempasini', 'login-title': 'Siyakwamukela Futhi', 'label-email': 'I-imeyili *', 'label-password': 'Iphasiwedi *', 'label-login-as': 'Ngena njengo *', 'role-buyer': 'Umthengi', 'role-seller': 'Umdayisi', 'btn-login': 'Ngena', 'toggle-login-text': 'Awunayo i-akhawunti?', 'toggle-login-link': 'Bhalisa', 'signup-title': 'Dala i-Akhawunti', 'label-fname': 'Igama lokuqala *', 'label-lname': 'Isibongo *', 'label-signup-as': 'Bhalisa njengo *', 'label-location': 'Indawo *', 'btn-signup': 'Bhalisa', 'toggle-signup-text': 'Sekunayo i-akhawunti?', 'toggle-signup-link': 'Ngena' },
+            'es': { 'branding-title': 'Compra, Vende y Descubre', 'login-title': 'Bienvenido de Nuevo', 'label-email': 'Correo *', 'label-password': 'Contraseña *', 'label-login-as': 'Entrar como *', 'role-buyer': 'Comprador', 'role-seller': 'Vendedor', 'btn-login': 'Entrar', 'toggle-login-text': '¿No tienes cuenta?', 'toggle-login-link': 'Regístrate', 'signup-title': 'Crear Cuenta', 'label-fname': 'Nombre *', 'label-lname': 'Apellido *', 'label-signup-as': 'Registrarse como *', 'label-location': 'Ubicación *', 'btn-signup': 'Registrarse', 'toggle-signup-text': '¿Ya tienes cuenta?', 'toggle-signup-link': 'Entrar' },
+            'fr': { 'branding-title': 'Achetez, Vendez et Découvrez', 'login-title': 'Bon Retour', 'label-email': 'Email *', 'label-password': 'Mot de passe *', 'label-login-as': 'Se connecter en tant que *', 'role-buyer': 'Acheteur', 'role-seller': 'Vendeur', 'btn-login': 'Connexion', 'toggle-login-text': 'Pas de compte ?', 'toggle-login-link': 'S\'inscrire', 'signup-title': 'Créer un Compte', 'label-fname': 'Prénom *', 'label-lname': 'Nom *', 'label-signup-as': 'S\'inscrire en tant que *', 'label-location': 'Emplacement *', 'btn-signup': 'S\'inscrire', 'toggle-signup-text': 'Déjà un compte ?', 'toggle-signup-link': 'Connexion' },
+            'de': { 'branding-title': 'Kaufen, Verkaufen & Entdecken', 'login-title': 'Willkommen Zurück', 'label-email': 'E-Mail *', 'label-password': 'Passwort *', 'label-login-as': 'Anmelden als *', 'role-buyer': 'Käufer', 'role-seller': 'Verkäufer', 'btn-login': 'Anmelden', 'toggle-login-text': 'Kein Konto?', 'toggle-login-link': 'Registrieren', 'signup-title': 'Konto Erstellen', 'label-fname': 'Vorname *', 'label-lname': 'Nachname *', 'label-signup-as': 'Registrieren als *', 'label-location': 'Standort *', 'btn-signup': 'Registrieren', 'toggle-signup-text': 'Bereits ein Konto?', 'toggle-signup-link': 'Anmelden' }
+        };
+
+        const langNames = { en: 'English', af: 'Afrikaans', zu: 'Zulu', es: 'Español', fr: 'Français', de: 'Deutsch' };
+
+        function changeLanguage(langCode) {
+            const dict = translations[langCode] || translations['en'];
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                if (dict[key]) el.textContent = dict[key];
+            });
+            document.documentElement.lang = langCode;
+            localStorage.setItem('eduvos-language', langCode);
+            document.getElementById('current-lang-text').textContent = langNames[langCode];
+        }
+
+        const langSelector = document.getElementById('language-selector');
+        langSelector.querySelector('.lang-selected').addEventListener('click', (e) => { e.stopPropagation(); langSelector.classList.toggle('active'); });
+        langSelector.querySelectorAll('.language-dropdown li').forEach(li => {
+            li.addEventListener('click', (e) => { changeLanguage(e.target.getAttribute('data-lang')); langSelector.classList.remove('active'); });
+        });
+        document.addEventListener('click', (e) => { if (!langSelector.contains(e.target)) langSelector.classList.remove('active'); });
+        if(localStorage.getItem('eduvos-language')) { changeLanguage(localStorage.getItem('eduvos-language')); }
+    </script>
+</body>
+</html>
