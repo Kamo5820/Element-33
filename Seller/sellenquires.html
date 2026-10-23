@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <base href="/">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Enquiries — Eduvos Marketplace</title>
+  <link rel="stylesheet" href="css/seller.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="wrap">
+      <a class="brand" href="Seller/SellerUI.html"><i>E</i>duvos Marketplace</a>
+      <nav class="nav">
+        <a href="Seller/SellerUI.html">Dashboard</a>
+        <a href="Seller/stocktaking.html">Stocktaking</a>
+        <a href="Seller/clientorders.html">Client Orders</a>
+        <a href="Seller/sellenquires.html" class="active">Enquiries</a>
+        <a href="Seller/sellerchat.html">Chat</a>
+      </nav>
+      <div class="account">
+        <span class="meta" style="font-weight: 600; color: var(--blue); margin-right: 10px;">Welcome, <span id="nav-username">Seller</span></span>
+        <button class="btn ghost" id="logout-btn">Log out</button>
+      </div>
+    </div>
+  </header>
+  <main class="wrap" style="padding-top: 40px; min-height: 70vh;">
+    <div class="panel fade-in" style="max-width: 800px; margin: 0 auto;">
+      <h2>Active Enquiries</h2>
+      <p class="meta" style="margin-bottom: 20px;">Click on a conversation to reply in the Chat tab.</p>
+      
+      <div id="enquiries-list">
+        <p class="meta">Redirecting you to your active chats...</p>
+      </div>
+    </div>
+  </main>
+  <script>
+    document.getElementById('nav-username').textContent = localStorage.getItem('userName') || 'Seller';
+    document.getElementById('logout-btn').addEventListener('click', () => window.location.href = '/index.html');
+    setTimeout(() => window.location.href = 'Seller/sellerchat.html', 1500);
+  </script>
+</body>
+</html>

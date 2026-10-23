@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <base href="/">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Product Details — Eduvos Marketplace</title>
+  <link rel="stylesheet" href="css/buyer.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="wrap">
+      <a class="brand" href="Buyer/BuyerUI.html"><i>E</i>duvos Marketplace</a>
+      <nav class="nav">
+        <a href="Buyer/BuyerUI.html">Discover</a>
+        <a href="Buyer/product.html" class="active">Products</a>
+        <a href="Buyer/saved.html">Saved</a>
+        <a href="Buyer/order-history.html">My Orders</a>
+        <a href="Buyer/enquiries.html">Enquiries</a>
+        <a href="Buyer/chat.html">Chat</a>
+      </nav>
+      <div class="account">
+        <a class="cart-pill" href="Buyer/cart.html">🛒 <span id="nav-cart-count">0</span></a>
+        <button class="btn ghost" id="logout">Log out</button>
+      </div>
+    </div>
+  </header>
+  <main class="wrap" style="padding-top: 40px; min-height: 75vh;">
+    <div class="layout" style="grid-template-columns: 1fr 1fr; gap: 40px; margin-top: 0;">
+      <div>
+        <img id="p-img" src="https://via.placeholder.com/600" alt="Product Image" style="width:100%; border-radius:var(--radius); box-shadow:var(--shadow-md); object-fit: cover;">
+      </div>
+      <div>
+        <span id="p-cat" class="meta" style="font-size:14px; text-transform:uppercase; color:var(--blue); font-weight: 600;">Category</span>
+        <h1 id="p-name" style="font-size:36px; margin:10px 0;">Loading...</h1>
+        <p class="meta" style="font-size: 15px;">Sold by <strong id="p-seller" style="color:var(--navy);">Seller</strong></p>
+        <p class="meta" style="font-size: 14px; margin-top: 4px;">📍 <span id="p-location"></span></p>
+        
+        <h2 id="p-price" style="font-size:32px; font-weight: 800; color:var(--navy); margin:24px 0;">R 0</h2>
+        <p id="p-desc" style="color:var(--muted); margin-bottom:30px; line-height:1.7; font-size: 15px;">Loading description...</p>
+        
+        <div style="display:flex; align-items:center; gap:20px; margin-bottom:30px;">
+          <span class="meta" style="color: var(--green); font-weight: 600;">In Stock (<span id="p-stock"></span>)</span>
+        </div>
+
+        <button id="add-to-cart-btn" class="btn primary" style="width:100%; padding:18px; font-size:16px; border-radius:12px; box-shadow: 0 8px 20px rgba(0, 98, 233, 0.2);">
+          Add to Cart
+        </button>
+        <button onclick="window.location.href='Buyer/chat.html'" class="btn ghost" style="width:100%; padding:15px; font-size:15px; border-radius:12px; margin-top:10px;">
+          💬 Chat with Seller
+        </button>
+      </div>
+    </div>
+  </main>
+  <footer class="footer">Eduvos Marketplace concept • Demo data only.</footer>
+  <script>
+    document.getElementById('logout').addEventListener('click', () => window.location.href = '/index.html');
+    
+    const id = new URLSearchParams(window.location.search).get('id');
+    let productData = null;
+
+    async function loadProduct() {
+        try {
+            const res = await fetch(`/api/products/${id}`);
+            productData = await res.json();
+            
+            document.getElementById('p-img').src = productData.image_url;
+            document.getElementById('p-name').textContent = productData.title;
+            document.getElementById('p-cat').textContent = productData.cat;
+            document.getElementById('p-seller').textContent = `${productData.first_name} ${productData.last_name}`;
+            document.getElementById('p-location').textContent = productData.location;
+            document.getElementById('p-price').textContent = `R ${parseFloat(productData.price).toLocaleString()}`;
+            document.getElementById('p-desc').textContent = productData.description;
+            document.getElementById('p-stock').textContent = productData.stock;
+        } catch(e) { console.error(e); }
+    }
+    loadProduct();
+
+    document.getElementById('add-to-cart-btn').onclick = () => {
+        if(!productData) return;
+        let cart = JSON.parse(localStorage.getItem('eduvos_cart')) || [];
+        const existing = cart.find(i => i.id == productData.id);
+        if (existing) existing.qty += 1; else cart.push({ id: productData.id, qty: 1 });
+        localStorage.setItem('eduvos_cart', JSON.stringify(cart));
+        alert('Added to cart!');
+        window.location.href = 'Buyer/cart.html';
+    };
+  </script>
+</body>
+</html>

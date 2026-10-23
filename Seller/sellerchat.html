@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <base href="/">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Seller Chat — Eduvos Marketplace</title>
+  <link rel="stylesheet" href="css/seller.css">
+  <style>
+    #chat-history { height: 400px; overflow-y: auto; border: 1px solid #e5edf6; padding: 20px; border-radius: 8px; background: #efeae2; margin-bottom: 15px; display: flex; flex-direction: column; }
+    #chat-form { display: flex; gap: 10px; align-items: center; }
+    #chat-form input[type="text"] { flex: 1; padding: 14px 18px; border: 1px solid #e5edf6; border-radius: 999px; outline: none; }
+    #chat-form button[type="submit"] { background: #0062e9; color: #fff; border: 0; padding: 0 24px; height: 48px; border-radius: 999px; font-weight: 600; cursor: pointer; }
+    .attach-btn { background: #fff; border: 1px solid #e5edf6; width: 48px; height: 48px; border-radius: 50%; cursor: pointer; font-size: 20px; }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="wrap">
+      <a class="brand" href="Seller/SellerUI.html"><i>E</i>duvos Marketplace</a>
+      <nav class="nav">
+        <a href="Seller/SellerUI.html">Dashboard</a>
+        <a href="Seller/stocktaking.html">Stocktaking</a>
+        <a href="Seller/clientorders.html">Client Orders</a>
+        <a href="Seller/sellenquires.html">Enquiries</a>
+        <a href="Seller/sellerchat.html" class="active">Chat</a>
+      </nav>
+      <div class="account">
+        <span class="meta" style="font-weight: 600; color: #0062e9; margin-right: 10px;">Welcome, <span id="nav-username">Seller</span></span>
+        <button class="btn ghost" id="logout-btn">Log out</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="wrap" style="padding-top: 40px; max-width: 800px; min-height: 70vh;">
+    <div class="panel fade-in">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid #e5edf6; padding-bottom: 15px;">
+        <h2 id="chat-header-name" style="margin: 0;">Select a Buyer</h2>
+        <select id="chat-user-select" style="padding: 8px 12px; border-radius: 8px; border: 1px solid #e5edf6; outline: none; cursor: pointer;">
+          <option>Loading buyers...</option>
+        </select>
+      </div>
+      
+      <div id="chat-history">
+        <p class="meta" style="text-align: center;">Loading messages...</p>
+      </div>
+      
+      <form id="chat-form">
+        <button type="button" class="attach-btn" onclick="document.getElementById('chat-file').click()">📎</button>
+        <input type="file" id="chat-file" hidden>
+        <input type="text" placeholder="Type a message..." autocomplete="off">
+        <button type="submit">Send</button>
+      </form>
+    </div>
+  </main>
+
+  <script>
+    const currentUserId = localStorage.getItem('userId');
+    document.getElementById('nav-username').textContent = localStorage.getItem('userName') || 'Seller';
+    if (!currentUserId) window.location.href = '/index.html';
+
+    document.getElementById('logout-btn').addEventListener('click', () => { localStorage.clear(); window.location.href = '/index.html'; });
+    
+    let currentChatTimer = null;
+
+    async function setupChat() {
+        const selectEl = document.getElementById('chat-user-select');
+        try {
+            const res = await fetch(`/api/users/role/student`);
+            const users = await res.json();
+            if (users.length === 0) { selectEl.innerHTML = '<option value="">No buyers found</option>'; return; }
+
+            selectEl.innerHTML = users.map(u => `<option value="${u.id}">${u.first_name} ${u.last_name}</option>`).join('');
+            loadChat(selectEl.value);
+            currentChatTimer = setInterval(() => loadChat(selectEl.value), 3000);
+            
+            selectEl.onchange = () => {
+                clearInterval(currentChatTimer);
+                loadChat(selectEl.value);
+                currentChatTimer = setInterval(() => loadChat(selectEl.value), 3000);
+            };
+        } catch(e) { console.error(e); }
+    }
+
+    async function loadChat(otherUserId) {
+        if (!otherUserId) return;
+        const container = document.getElementById('chat-history');
+        try {
+            const res = await fetch(`/api/chat?user1=${currentUserId}&user2=${otherUserId}`);
+            const chats = await res.json();
+            
+            const userRes = await fetch(`/api/user/${otherUserId}`);
+            const user = await userRes.json();
+            document.getElementById('chat-header-name').textContent = `Chat with ${user.first_name}`;
+
+            container.innerHTML = chats.map(c => {
+                const isMe = c.sender_id == currentUserId;
+                return `
+                <div style="display:flex; justify-content:${isMe ? 'flex-end' : 'flex-start'}; margin-bottom:8px; align-items:flex-end; gap:8px;">
+                    <div style="background:${isMe ? '#d9fdd3' : '#fff'}; padding:8px 12px; border-radius:8px; max-width:75%;">
+                        ${c.message ? `<p style="margin:0; font-size:14px;">${c.message}</p>` : ''}
+                        ${c.file_url ? `<a href="${c.file_url}" target="_blank" style="font-size:13px; display:block; margin-top:4px;">📎 Attachment</a>` : ''}
+                    </div>
+                </div>`;
+            }).join('') || '<p class="meta" style="text-align:center;">No messages yet.</p>';
+            container.scrollTop = container.scrollHeight;
+        } catch(e) { console.error(e); }
+    }
+
+    document.getElementById('chat-form').onsubmit = async (e) => {
+        e.preventDefault();
+        const input = e.target.querySelector('input[type="text"]');
+        const fileInput = document.getElementById('chat-file');
+        const otherUserId = document.getElementById('chat-user-select').value;
+        let fileUrl = null;
+
+        if (fileInput.files.length > 0) {
+            const formData = new FormData();
+            formData.append('file', fileInput.files[0]);
+            const uploadRes = await fetch('/api/chat/upload', { method: 'POST', body: formData });
+            const uploadData = await uploadRes.json();
+            fileUrl = uploadData.url;
+        }
+
+        await fetch('/api/chat', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ sender_id: currentUserId, receiver_id: otherUserId, message: input.value, file_url: fileUrl })
+        });
+        input.value = ''; fileInput.value = '';
+        loadChat(otherUserId);
+    };
+
+    setupChat();
+  </script>
+</body>
+</html>

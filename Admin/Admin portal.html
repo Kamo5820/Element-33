@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <base href="/">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Eduvos Marketplace - Admin Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-body: #f3f4f6; --sidebar-bg: #ffffff; --text-main: #111827; --text-muted: #6b7280;
+            --border: #e5e7eb; --primary: #0062e9; --accent-red: #ef4444; --accent-green: #10b981; --accent-yellow: #f59e0b;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
+        body { background-color: var(--bg-body); color: var(--text-main); height: 100vh; display: flex; overflow: hidden; }
+        
+        #login-screen { position: fixed; inset: 0; z-index: 9999; background: var(--bg-body); display: flex; justify-content: center; align-items: center; }
+        .login-box { background: var(--sidebar-bg); padding: 40px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); width: 100%; max-width: 400px; border: 1px solid var(--border); }
+        .login-box h1 { font-size: 24px; margin-bottom: 10px; text-align: center; }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; font-size: 13px; font-weight: 500; margin-bottom: 5px; }
+        .form-group input { width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; outline: none; }
+        .btn-primary { width: 100%; padding: 12px; background: var(--primary); color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; margin-top: 10px; }
+        
+        #dashboard { display: none; width: 100%; height: 100%; }
+        .sidebar { width: 260px; background: var(--sidebar-bg); border-right: 1px solid var(--border); display: flex; flex-direction: column; padding: 20px 0; }
+        .brand { padding: 0 24px 20px; font-size: 22px; font-weight: 800; display: flex; align-items: center; gap: 10px; }
+        .brand svg { width: 28px; height: 28px; fill: var(--primary); }
+        
+        .nav-item { padding: 12px 24px; display: flex; align-items: center; gap: 12px; color: var(--text-muted); font-weight: 500; font-size: 14px; cursor: pointer; border-left: 3px solid transparent; transition: 0.2s; }
+        .nav-item:hover { background: #f9fafb; color: var(--text-main); }
+        .nav-item.active { background: #eff6ff; color: var(--primary); border-left-color: var(--primary); }
+        
+        .main-content { flex: 1; display: flex; flex-direction: column; overflow-y: auto; }
+        .topbar { height: 70px; background: var(--sidebar-bg); border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; padding: 0 32px; }
+        .btn-outline, .btn-logout { padding: 8px 16px; background: transparent; border: 1px solid var(--border); border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; }
+        
+        .dashboard-inner { padding: 32px; max-width: 1400px; margin: 0 auto; width: 100%; }
+        
+        .view-section { display: none; animation: fadeIn 0.3s ease; }
+        .view-section.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 30px; }
+        .stat-card { background: var(--sidebar-bg); border-radius: 12px; padding: 24px; border: 1px solid var(--border); }
+        .stat-title { font-size: 14px; color: var(--text-muted); font-weight: 500; margin-bottom: 10px; }
+        .stat-value { font-size: 32px; font-weight: 700; }
+        .stat-badge { display: inline-block; padding: 4px 8px; border-radius: 20px; font-size: 12px; font-weight: 600; margin-top: 12px; }
+        .badge-green { background: #ecfdf5; color: var(--accent-green); }
+        .badge-blue { background: #eff6ff; color: var(--primary); }
+        .badge-yellow { background: #fffbeb; color: var(--accent-yellow); }
+
+        .panel { background: var(--sidebar-bg); border-radius: 12px; border: 1px solid var(--border); margin-bottom: 24px; overflow: hidden; }
+        .panel-header { padding: 20px 24px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+        table { width: 100%; border-collapse: collapse; text-align: left; }
+        th { padding: 14px 24px; background: #f9fafb; color: var(--text-muted); font-weight: 600; font-size: 12px; text-transform: uppercase; border-bottom: 1px solid var(--border); }
+        td { padding: 16px 24px; border-bottom: 1px solid var(--border); font-size: 14px; }
+        .user-info strong { display: block; font-size: 14px; }
+        .user-info span { font-size: 12px; color: var(--text-muted); }
+        .status-badge { display: inline-flex; align-items: center; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+        .status-online { background: #ecfdf5; color: var(--accent-green); }
+        .status-offline { background: #f3f4f6; color: var(--text-muted); }
+        
+        .btn-action { padding: 6px 10px; background: #eff6ff; color: var(--primary); border: 1px solid #bfdbfe; border-radius: 6px; font-size: 12px; font-weight: 500; cursor: pointer; }
+        .btn-danger { padding: 6px 10px; background: #fef2f2; color: var(--accent-red); border: 1px solid #fecaca; border-radius: 6px; font-size: 12px; font-weight: 500; cursor: pointer; }
+        
+        .timer-text { font-family: monospace; font-weight: 600; color: var(--primary); font-size: 13px; }
+
+        .log-row { display: flex; justify-content: space-between; padding: 16px 24px; border-bottom: 1px solid var(--border); font-size: 14px; }
+        .log-row:last-child { border-bottom: none; }
+        .log-time { color: var(--text-muted); font-size: 13px; width: 160px; flex-shrink: 0; }
+        .log-msg { font-weight: 500; flex: 1; }
+        
+        .login-status { display: flex; align-items: center; gap: 8px; font-weight: 600; margin-bottom: 5px; }
+        .login-status.online { color: var(--accent-green); }
+        .login-status.offline { color: var(--text-muted); }
+
+        .charts-row { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 24px; }
+        .chart-card { background: var(--sidebar-bg); border-radius: 12px; border: 1px solid var(--border); padding: 24px; display: flex; align-items: center; gap: 30px; }
+        .donut-chart { width: 120px; height: 120px; border-radius: 50%; display: flex; justify-content: center; align-items: center; position: relative; }
+        .donut-inner { width: 90px; height: 90px; background: var(--sidebar-bg); border-radius: 50%; display: flex; flex-direction: column; justify-content: center; align-items: center; }
+        .donut-inner strong { font-size: 20px; line-height: 1; }
+        .donut-inner span { font-size: 10px; color: var(--text-muted); text-transform: uppercase; margin-top: 4px; }
+        .gender-stats { flex: 1; }
+        .gender-bar-row { margin-bottom: 12px; }
+        .gender-label { display: flex; justify-content: space-between; font-size: 13px; font-weight: 500; margin-bottom: 4px; }
+        .gender-bar { height: 8px; background: #f3f4f6; border-radius: 4px; overflow: hidden; }
+        .gender-fill { height: 100%; border-radius: 4px; }
+    </style>
+</head>
+<body>
+    <div id="login-screen">
+        <div class="login-box">
+            <h1>Admin Security</h1>
+            <form id="admin-login-form">
+                <div class="form-group"><label>Admin Email</label><input type="email" id="admin-email" required></div>
+                <div class="form-group"><label>Password</label><input type="password" id="admin-password" required></div>
+                <button type="submit" class="btn-primary">Verify & Login</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="dashboard">
+        <aside class="sidebar">
+            <div class="brand">
+                <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg> Eduvos Admin
+            </div>
+            <div class="nav-item active" onclick="switchView('overview', this)">
+                <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg> Overview
+            </div>
+            <div class="nav-item" onclick="switchView('users', this)">
+                <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg> View All Users
+            </div>
+            <div class="nav-item" onclick="switchView('logs', this)">
+                <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg> System Logs
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <header class="topbar">
+                <h2 id="page-title">System Overview</h2>
+                <div>
+                    <button class="btn-outline" onclick="loadDashboardData()">↻ Refresh</button>
+                    <button class="btn-logout" id="logout-btn">Log Out</button>
+                </div>
+            </header>
+
+            <div class="dashboard-inner">
+                <div id="view-overview" class="view-section active">
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-title">Total Registered Users</div>
+                            <div class="stat-value" id="stat-total-users">0</div>
+                            <div class="stat-badge badge-blue">Live Database</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-title">Currently Logged In</div>
+                            <div class="stat-value" id="stat-active-users">0</div>
+                            <div class="stat-badge badge-green" id="stat-percentage">0% Online</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-title">System Logs</div>
+                            <div class="stat-value" id="stat-total-logs">0</div>
+                            <div class="stat-badge badge-yellow">Activities Recorded</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="view-users" class="view-section">
+                    <div class="charts-row">
+                        <div class="chart-card">
+                            <div class="donut-chart" id="donut-chart">
+                                <div class="donut-inner">
+                                    <strong id="donut-percent">0%</strong>
+                                    <span>Online</span>
+                                </div>
+                            </div>
+                            <div>
+                                <h3 style="font-size: 16px; margin-bottom: 5px;">Live Activity</h3>
+                                <p style="font-size: 13px; color: var(--text-muted);">Percentage of registered users currently active on the site.</p>
+                            </div>
+                        </div>
+                        <div class="chart-card">
+                            <div class="gender-stats">
+                                <h3>Gender Demographics</h3>
+                                <div id="gender-bars-container"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="panel">
+                        <div class="panel-header"><h3>User Management & Active Sessions</h3></div>
+                        <table id="users-table">
+                            <thead><tr><th>User Details</th><th>Gender</th><th>Device / OS</th><th>Status</th><th>Session Time</th><th>Actions</th></tr></thead>
+                            <tbody><tr><td colspan="6" style="text-align:center;">Loading...</td></tr></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div id="view-logs" class="view-section">
+                    <div class="panel">
+                        <div class="panel-header">
+                            <h3>User Activity Overview</h3>
+                            <button class="btn-outline" onclick="clearLogs()" style="color: var(--accent-red); border-color: #fca5a5;">Clear All Logs</button>
+                        </div>
+                        <table id="logs-users-table">
+                            <thead>
+                                <tr>
+                                    <th>User</th>
+                                    <th>Current Status</th>
+                                    <th>Total Logs Recorded</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="logs-users-tbody"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div id="view-user-logs" class="view-section">
+                    <div class="panel">
+                        <div class="panel-header">
+                            <h3 id="user-log-title">User Logs</h3>
+                            <button class="btn-outline" onclick="switchView('logs', document.querySelectorAll('.nav-item')[2])">← Back to User Logs</button>
+                        </div>
+                        <div id="individual-logs-container"></div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        const API_BASE_URL = '/api';
+        let timerInterval;
+        let dbUsers = [];
+        let currentViewedUser = null;
+
+        window.addEventListener('storage', (e) => {
+            if (e.key === 'eduvos_system_logs' || e.key === 'eduvos_active_sessions' || e.key === 'eduvos_registered_users') {
+                fetchUsers();
+                renderLogsOverview();
+                if (document.getElementById('view-user-logs').classList.contains('active') && currentViewedUser) {
+                    renderIndividualLogs(currentViewedUser);
+                }
+            }
+        });
+
+        function switchView(viewId, element) {
+            document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+            document.getElementById(`view-${viewId}`).classList.add('active');
+            if (element) {
+                document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+                element.classList.add('active');
+            }
+            const titles = { overview: 'System Overview', users: 'User Management', logs: 'System Activity Logs', 'user-logs': 'Individual User Logs' };
+            document.getElementById('page-title').textContent = titles[viewId];
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            if (localStorage.getItem('adminToken') === 'verified_admin_session') {
+                document.getElementById('login-screen').style.display = 'none';
+                document.getElementById('dashboard').style.display = 'flex';
+                loadDashboardData();
+            }
+        });
+
+        document.getElementById('admin-login-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            if (document.getElementById('admin-email').value.trim() === 'Element-33@gmail.com' && document.getElementById('admin-password').value === 'admin@123') {
+                localStorage.setItem('adminToken', 'verified_admin_session');
+                document.getElementById('login-screen').style.display = 'none';
+                document.getElementById('dashboard').style.display = 'flex';
+                loadDashboardData();
+            } else { alert("Access Denied"); }
+        });
+
+        document.getElementById('logout-btn').addEventListener('click', () => {
+            localStorage.removeItem('adminToken');
+            document.getElementById('dashboard').style.display = 'none';
+            document.getElementById('login-screen').style.display = 'flex';
+        });
+
+        async function loadDashboardData() {
+            if (timerInterval) clearInterval(timerInterval);
+            await fetchUsers();
+            renderLogsOverview(); 
+            timerInterval = setInterval(() => { 
+                updateStats(); 
+                renderUsersTable(); 
+                renderLogsOverview(); 
+                if (document.getElementById('view-user-logs').classList.contains('active') && currentViewedUser) {
+                    renderIndividualLogs(currentViewedUser);
+                }
+            }, 1000);
+        }
+
+        async function fetchUsers() {
+            try {
+                const res = await fetch(`${API_BASE_URL}/admin/users`);
+                const apiUsers = await res.json();
+                const localUsers = JSON.parse(localStorage.getItem('eduvos_registered_users')) || [];
+                const combined = [...apiUsers];
+                localUsers.forEach(lu => { if (!combined.find(u => u.email === lu.email)) combined.push(lu); });
+                dbUsers = combined;
+            } catch (error) {
+                dbUsers = JSON.parse(localStorage.getItem('eduvos_registered_users')) || [];
+            }
+            updateStats();
+            renderUsersTable();
+        }
+
+        function updateStats() {
+            const activeSessions = JSON.parse(localStorage.getItem('eduvos_active_sessions')) || {};
+            const logs = JSON.parse(localStorage.getItem('eduvos_system_logs')) || [];
+            
+            const totalUsers = dbUsers.length;
+            let activeUsers = 0;
+            Object.values(activeSessions).forEach(session => { if(session.isActive) activeUsers++; });
+
+            const percentage = totalUsers > 0 ? Math.round((activeUsers / totalUsers) * 100) : 0;
+
+            document.getElementById('stat-total-users').textContent = totalUsers;
+            document.getElementById('stat-active-users').textContent = activeUsers;
+            document.getElementById('stat-percentage').textContent = `${percentage}% Online`;
+            document.getElementById('stat-total-logs').textContent = logs.length;
+
+            document.getElementById('donut-percent').textContent = `${percentage}%`;
+            document.getElementById('donut-chart').style.background = `conic-gradient(var(--accent-green) ${percentage}%, #e5e7eb ${percentage}% 100%)`;
+
+            let male = 0, female = 0, nonBinary = 0, preferNot = 0;
+            dbUsers.forEach(u => {
+                const g = (u.gender || 'Prefer not to say').toLowerCase();
+                if (g === 'male') male++;
+                else if (g === 'female') female++;
+                else if (g === 'non-binary') nonBinary++;
+                else preferNot++;
+            });
+
+            const totalGender = male + female + nonBinary + preferNot;
+            const malePct = totalGender > 0 ? Math.round((male / totalGender) * 100) : 0;
+            const femalePct = totalGender > 0 ? Math.round((female / totalGender) * 100) : 0;
+            const nonBinaryPct = totalGender > 0 ? Math.round((nonBinary / totalGender) * 100) : 0;
+            const preferNotPct = totalGender > 0 ? Math.round((preferNot / totalGender) * 100) : 0;
+
+            document.getElementById('gender-bars-container').innerHTML = `
+                <div class="gender-bar-row">
+                    <div class="gender-label"><span>Male</span> <span>${malePct}%</span></div>
+                    <div class="gender-bar"><div class="gender-fill" style="width: ${malePct}%; background: #3b82f6;"></div></div>
+                </div>
+                <div class="gender-bar-row">
+                    <div class="gender-label"><span>Female</span> <span>${femalePct}%</span></div>
+                    <div class="gender-bar"><div class="gender-fill" style="width: ${femalePct}%; background: #ec4899;"></div></div>
+                </div>
+                <div class="gender-bar-row">
+                    <div class="gender-label"><span>Non-binary</span> <span>${nonBinaryPct}%</span></div>
+                    <div class="gender-bar"><div class="gender-fill" style="width: ${nonBinaryPct}%; background: #8b5cf6;"></div></div>
+                </div>
+                <div class="gender-bar-row">
+                    <div class="gender-label"><span>Prefer not to say</span> <span>${preferNotPct}%</span></div>
+                    <div class="gender-bar"><div class="gender-fill" style="width: ${preferNotPct}%; background: #9ca3af;"></div></div>
+                </div>
+            `;
+        }
+
+        function renderUsersTable() {
+            const tbody = document.querySelector('#users-table tbody');
+            const activeSessions = JSON.parse(localStorage.getItem('eduvos_active_sessions')) || {};
+            
+            if (dbUsers.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">No users found.</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = dbUsers.map(user => {
+                const session = activeSessions[user.email];
+                const isActive = session && session.isActive;
+                let sessionTimeStr = '-';
+                if (isActive) {
+                    const diff = Date.now() - session.loginTime;
+                    const hrs = Math.floor(diff / 3600000);
+                    const mins = Math.floor((diff % 3600000) / 60000);
+                    const secs = Math.floor((diff % 60000) / 1000);
+                    sessionTimeStr = `<span class="timer-text">${hrs}h ${mins}m ${secs}s</span>`;
+                }
+
+                const fName = user.first_name || user.name || 'Student';
+                const lName = user.last_name || '';
+                const gender = user.gender || 'Prefer not to say';
+
+                return `
+                    <tr>
+                        <td><div class="user-info"><strong>${fName} ${lName}</strong><span>${user.email}</span></div></td>
+                        <td><span class="status-badge" style="background:#f3f4f6; color:#4b5563;">${gender}</span></td>
+                        <td>${isActive ? session.device : 'Unknown'}</td>
+                        <td><span class="status-badge ${isActive ? 'status-online' : 'status-offline'}">${isActive ? '● Online' : '○ Offline'}</span></td>
+                        <td>${sessionTimeStr}</td>
+                        <td>
+                            <div style="display:flex; gap: 6px; flex-wrap: wrap;">
+                                <button class="btn-action" onclick="viewUserLogs('${user.email}')">View Logs</button>
+                                <button class="btn-action" onclick="resetPassword(${user.id || 0}, '${user.email}')">Reset Pass</button>
+                                <button class="btn-danger" onclick="deleteUser(${user.id || 0}, '${user.email}')">Delete</button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function renderLogsOverview() {
+            const tbody = document.getElementById('logs-users-tbody');
+            const activeSessions = JSON.parse(localStorage.getItem('eduvos_active_sessions')) || {};
+            const allLogs = JSON.parse(localStorage.getItem('eduvos_system_logs')) || [];
+
+            if (dbUsers.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">No users found.</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = dbUsers.map(user => {
+                const session = activeSessions[user.email];
+                const isActive = session && session.isActive;
+                const userLogCount = allLogs.filter(log => log.message.includes(user.email) || log.message.includes(user.first_name)).length;
+                const fName = user.first_name || user.name || 'Student';
+
+                return `
+                    <tr>
+                        <td><div class="user-info"><strong>${fName} ${user.last_name || ''}</strong><span>${user.email}</span></div></td>
+                        <td><span class="status-badge ${isActive ? 'status-online' : 'status-offline'}">${isActive ? '● Currently Online' : '○ Offline'}</span></td>
+                        <td>${userLogCount} entries</td>
+                        <td><button class="btn-action" onclick="viewUserLogs('${user.email}')">View Specific Logs</button></td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function viewUserLogs(email) {
+            currentViewedUser = email;
+            const user = dbUsers.find(u => u.email === email);
+            const name = user ? (user.first_name || user.name) : email;
+            document.getElementById('user-log-title').textContent = `Activity Logs: ${name}`;
+            renderIndividualLogs(email);
+            switchView('user-logs', null);
+        }
+
+        function renderIndividualLogs(email) {
+            const container = document.getElementById('individual-logs-container');
+            const activeSessions = JSON.parse(localStorage.getItem('eduvos_active_sessions')) || {};
+            const logs = JSON.parse(localStorage.getItem('eduvos_system_logs')) || [];
+            const session = activeSessions[email];
+            
+            const user = dbUsers.find(u => u.email === email);
+            const userName = user ? (user.first_name || user.name) : email;
+            const userLogs = logs.filter(log => log.message.includes(userName) || log.message.includes(email));
+
+            let html = '';
+
+            if (session && session.isActive) {
+                const diff = Date.now() - session.loginTime;
+                const hrs = Math.floor(diff / 3600000);
+                const mins = Math.floor((diff % 3600000) / 60000);
+                const secs = Math.floor((diff % 60000) / 1000);
+
+                html += `
+                    <div class="log-row" style="background: #ecfdf5;">
+                        <div class="log-time">Today</div>
+                        <div class="log-msg">
+                            <div class="login-status online">● Currently Active (${session.device})</div>
+                            Live Timer: <span class="timer-text">${hrs}h ${mins}m ${secs}s</span>
+                        </div>
+                    </div>
+                `;
+            }
+
+            if (userLogs.length === 0 && !session) {
+                html += '<div style="padding: 24px; text-align:center; color:var(--text-muted);">No logs recorded for this user yet.</div>';
+            } else {
+                html += userLogs.slice().reverse().map(log => `
+                    <div class="log-row">
+                        <div class="log-time">${log.time}</div>
+                        <div class="log-msg">
+                            <div class="login-status ${log.message.includes('logged out') ? 'offline' : 'online'}">
+                                ${log.message.includes('logged out') ? '○ Logged Out' : '● Logged In'}
+                            </div>
+                            ${log.message}
+                        </div>
+                    </div>
+                `).join('');
+            }
+
+            container.innerHTML = html;
+        }
+
+        async function resetPassword(id, email) {
+            const newPass = prompt(`Enter new password for ${email}:`);
+            if (!newPass || newPass.length < 6) return alert("Password must be 6+ chars.");
+            try {
+                await fetch(`${API_BASE_URL}/admin/reset-password`, {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id, newPassword: newPass })
+                });
+                addLog(`Admin reset password for ${email}`);
+                alert("Password updated.");
+            } catch (e) { alert("Server offline."); }
+        }
+
+        async function deleteUser(id, email) {
+            if (!confirm(`Delete account for ${email}?`)) return;
+            try {
+                if(id) await fetch(`${API_BASE_URL}/admin/users/${id}`, { method: 'DELETE' });
+                let localUsers = JSON.parse(localStorage.getItem('eduvos_registered_users')) || [];
+                localUsers = localUsers.filter(u => u.email !== email);
+                localStorage.setItem('eduvos_registered_users', JSON.stringify(localUsers));
+                
+                let sessions = JSON.parse(localStorage.getItem('eduvos_active_sessions')) || {};
+                if(sessions[email]) { delete sessions[email]; localStorage.setItem('eduvos_active_sessions', JSON.stringify(sessions)); }
+
+                addLog(`Admin deleted account for ${email}`);
+                fetchUsers();
+            } catch (e) { alert("Server offline."); }
+        }
+
+        function clearLogs() {
+            if (confirm("Clear ALL system logs globally?")) {
+                localStorage.removeItem('eduvos_system_logs');
+                renderLogsOverview();
+                updateStats();
+            }
+        }
+
+        function addLog(message) {
+            let logs = JSON.parse(localStorage.getItem('eduvos_system_logs')) || [];
+            logs.push({ time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), message });
+            localStorage.setItem('eduvos_system_logs', JSON.stringify(logs));
+            renderLogsOverview();
+            updateStats();
+        }
+    </script>
+</body>
+</html>

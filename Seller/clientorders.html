@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <base href="/">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Client Orders — Eduvos Marketplace</title>
+  <link rel="stylesheet" href="css/seller.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="wrap">
+      <a class="brand" href="Seller/SellerUI.html"><i>E</i>duvos Marketplace</a>
+      <nav class="nav">
+        <a href="Seller/SellerUI.html">Dashboard</a>
+        <a href="Seller/stocktaking.html">Stocktaking</a>
+        <a href="Seller/clientorders.html" class="active">Client Orders</a>
+        <a href="Seller/sellenquires.html">Enquiries</a>
+        <a href="Seller/sellerchat.html">Chat</a>
+      </nav>
+      <div class="account">
+        <span class="meta" style="font-weight: 600; color: var(--blue); margin-right: 10px;">Welcome, <span id="nav-username">Seller</span></span>
+        <button class="btn ghost" id="logout-btn">Log out</button>
+      </div>
+    </div>
+  </header>
+  <main class="wrap" style="padding-top: 40px; min-height: 70vh;">
+    <div class="panel fade-in">
+      <h2>Client Orders</h2>
+      <p class="meta" style="margin-bottom: 20px;">Track purchases made by buyers.</p>
+      
+      <div style="margin-bottom: 20px; display: flex; gap: 10px; align-items: center;">
+        <label style="font-size: 14px; font-weight: 600;">Sort by Buyer Name:</label>
+        <select id="sort-select" style="padding: 10px; border-radius: 8px; border: 1px solid var(--line); outline: none; cursor: pointer;">
+          <option value="AZ">A-Z</option>
+          <option value="ZA">Z-A</option>
+        </select>
+      </div>
+
+      <div id="orders-list"></div>
+    </div>
+  </main>
+  <script>
+    document.getElementById('nav-username').textContent = localStorage.getItem('userName') || 'Seller';
+    document.getElementById('logout-btn').addEventListener('click', () => {
+      localStorage.clear();
+      window.location.href = '/index.html';
+    });
+
+    let allOrders = [];
+    async function fetchOrders() {
+      try {
+        const res = await fetch(`/api/orders/seller/${localStorage.getItem('userId')}`);
+        allOrders = await res.json();
+        renderOrders();
+      } catch (e) { console.error(e); }
+    }
+
+    function renderOrders() {
+      const sort = document.getElementById('sort-select').value;
+      const sorted = [...allOrders].sort((a, b) => {
+        const nameA = a.buyer_name.toUpperCase();
+        const nameB = b.buyer_name.toUpperCase();
+        if (sort === 'AZ') return nameA < nameB ? -1 : 1;
+        return nameA > nameB ? -1 : 1;
+      });
+      
+      document.getElementById('orders-list').innerHTML = sorted.map(o => `
+        <div class="order-card" style="border:1px solid #e5edf6; padding:15px; margin-bottom:15px; border-radius:8px; cursor:pointer;" onclick="toggleDetails(${o.id})">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <p style="margin:0;"><strong>${o.buyer_name}</strong> ordered ${o.product_name} (x${o.quantity})</p>
+            <span style="font-size:12px; color:var(--muted);">Order #${o.id} - ${new Date(o.created_at).toLocaleDateString()}</span>
+          </div>
+          <div id="details-${o.id}" style="display:none; margin-top:10px; border-top:1px solid var(--line); padding-top:10px;">
+            <p>Total: <strong>R ${parseFloat(o.total_price).toLocaleString()}</strong></p>
+            <p>Status: <span style="background: #fff4dc; color: #a75b00; padding: 3px 8px; border-radius: 999px; font-size: 12px; font-weight:600;">${o.tracking_status}</span></p>
+            <div style="margin-top: 12px; display: flex; gap: 10px;">
+              <button class="btn primary sm" onclick="event.stopPropagation(); window.location.href='Seller/sellerchat.html?user=${o.buyer_id}'">💬 Chat</button>
+              <button class="btn ghost sm" onclick="event.stopPropagation(); window.location.href='Seller/trackorderupdater.html?orderId=${o.id}'">🚚 Update Tracking</button>
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+    document.getElementById('sort-select').onchange = renderOrders;
+    window.toggleDetails = (id) => {
+      const el = document.getElementById(`details-${id}`);
+      if (el) el.style.display = el.style.display === 'none' ? 'block' : 'none';
+    };
+    fetchOrders();
+  </script>
+</body>
+</html>

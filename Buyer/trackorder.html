@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <base href="/">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Track Order — Eduvos Marketplace</title>
+  <link rel="stylesheet" href="css/buyer.css">
+  <style>
+    .timeline { position: relative; margin-top: 24px; padding-left: 30px; display: flex; flex-direction: column; gap: 28px; }
+    .timeline::before { content: ''; position: absolute; left: 8px; top: 6px; bottom: 6px; width: 2px; background: var(--line); }
+    .step { position: relative; }
+    .step::before { content: ''; position: absolute; left: -30px; top: 4px; width: 18px; height: 18px; border-radius: 50%; background: var(--surface); border: 3px solid var(--line); transition: all var(--transition); }
+    .step.done::before { background: var(--green); border-color: var(--green); }
+    .step.now::before { border-color: var(--blue); box-shadow: 0 0 0 5px var(--blue-soft); }
+    .step strong { display: block; font-size: 15px; }
+    .step .meta { margin-top: 2px; }
+  </style>
+</head>
+<body>
+<header class="topbar">
+  <div class="wrap">
+    <a class="brand" href="Buyer/BuyerUI.html"><i>E</i>duvos Marketplace</a>
+    <nav class="nav">
+      <a href="Buyer/BuyerUI.html">Discover</a>
+      <a href="Buyer/product.html">Products</a>
+      <a href="Buyer/saved.html">Saved</a>
+      <a href="Buyer/order-history.html" class="active">My Orders</a>
+      <a href="Buyer/enquiries.html">Enquiries</a>
+      <a href="Buyer/chat.html">Chat</a>
+    </nav>
+    <div class="account">
+      <a class="cart-pill" href="Buyer/cart.html">🛒 <span id="nav-cart-count">0</span></a>
+      <button class="btn ghost" id="logout">Log out</button>
+    </div>
+  </div>
+</header>
+<main class="wrap layout">
+  <div>
+    <section class="panel fade-in">
+      <div class="row-between">
+        <div>
+          <h2>Track Order <span id="order-id-display"></span></h2>
+          <p class="meta" style="margin-top: 6px;">Expected Delivery: <span id="track-delivery">TBD</span></p>
+        </div>
+        <a href="Buyer/order-history.html" class="btn ghost sm">Back to Orders</a>
+      </div>
+
+      <div class="timeline" id="timeline-container"></div>
+    </section>
+  </div>
+  <aside>
+    <section class="panel fade-in">
+      <h3>Collection Info</h3>
+      <p class="meta" style="margin-bottom: 12px;">Please bring your student card to the collection point.</p>
+      <div style="background: var(--bg); padding: 12px; border-radius: 8px; border: 1px solid var(--line);">
+        <strong style="display:block; font-size: 14px;">Campus Bookstore</strong>
+        <span class="meta" style="display:block; margin-top: 4px;">Main Building, Ground Floor</span>
+      </div>
+    </section>
+  </aside>
+</main>
+<footer class="footer">Eduvos Marketplace concept • Demo data only.</footer>
+<script>
+  document.getElementById('logout').addEventListener('click', () => window.location.href = '/index.html');
+  
+  const urlParams = new URLSearchParams(window.location.search);
+  const orderId = urlParams.get('id') || 1;
+  
+  async function loadTracking() {
+      try {
+          const res = await fetch(`/api/orders/${orderId}`);
+          const o = await res.json();
+          
+          document.getElementById('order-id-display').textContent = `#${o.id}`;
+          document.getElementById('track-delivery').textContent = o.expected_delivery || 'TBD';
+          
+          const steps = ['Order Placed', 'Processing', 'Ready for Collection', 'Delivered'];
+          const currentStatus = o.tracking_status || 'Order Placed';
+          const currentIndex = steps.indexOf(currentStatus);
+
+          document.getElementById('timeline-container').innerHTML = steps.map((step, i) => {
+              let className = '';
+              if (i < currentIndex) className = 'done';
+              else if (i === currentIndex) className = 'now';
+              
+              return `
+                <div class="step ${className}">
+                  <strong>${step}</strong>
+                  <div class="meta">${i <= currentIndex ? 'Updated' : 'Pending'}</div>
+                </div>
+              `;
+          }).join('');
+      } catch (e) {
+          console.error("Could not load order");
+      }
+  }
+  loadTracking();
+</script>
+</body>
+</html>

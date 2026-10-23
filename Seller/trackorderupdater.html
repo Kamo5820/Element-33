@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <base href="/">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Update Tracking — Eduvos Marketplace</title>
+  <link rel="stylesheet" href="css/seller.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="wrap">
+      <a class="brand" href="Seller/SellerUI.html"><i>E</i>duvos Marketplace</a>
+      <nav class="nav">
+        <a href="Seller/SellerUI.html">Dashboard</a>
+        <a href="Seller/stocktaking.html">Stocktaking</a>
+        <a href="Seller/clientorders.html" class="active">Client Orders</a>
+        <a href="Seller/sellenquires.html">Enquiries</a>
+        <a href="Seller/sellerchat.html">Chat</a>
+      </nav>
+      <div class="account">
+        <span class="meta" style="font-weight: 600; color: var(--blue); margin-right: 10px;">Welcome, <span id="nav-username">Seller</span></span>
+        <button class="btn ghost" id="logout-btn">Log out</button>
+      </div>
+    </div>
+  </header>
+  <main class="wrap" style="padding-top: 40px; max-width: 600px; min-height: 70vh;">
+    <div class="panel fade-in">
+      <h2>Update Tracking for Order #<span id="o-id"></span></h2>
+      <p class="meta" style="margin-bottom: 20px;">Buyer: <strong id="o-buyer"></strong></p>
+      
+      <div class="form-group" style="margin-bottom:20px;">
+        <label style="display:block; font-size:14px; font-weight:600; margin-bottom:8px;">Update Status</label>
+        <select id="status" style="width:100%; padding:12px; border-radius:8px; border:1px solid var(--line);">
+            <option value="Order Placed">Order Placed</option>
+            <option value="Processing">Processing</option>
+            <option value="Ready for Collection">Ready for Collection</option>
+            <option value="Delivered">Delivered</option>
+        </select>
+      </div>
+      <button onclick="updateTracking()" class="btn primary" style="width:100%; padding:15px;">🚚 Update Progress</button>
+    </div>
+  </main>
+  <script>
+    document.getElementById('nav-username').textContent = localStorage.getItem('userName') || 'Seller';
+    document.getElementById('logout-btn').addEventListener('click', () => {
+      localStorage.clear();
+      window.location.href = '/index.html';
+    });
+
+    const orderId = new URLSearchParams(window.location.search).get('orderId');
+    
+    async function loadOrderInfo() {
+        const res = await fetch(`/api/orders/${orderId}`);
+        const o = await res.json();
+        document.getElementById('o-id').textContent = o.id;
+        document.getElementById('o-buyer').textContent = `${o.buyer_name} (${o.buyer_location})`;
+        document.getElementById('status').value = o.tracking_status;
+    }
+    loadOrderInfo();
+
+    async function updateTracking() {
+        const status = document.getElementById('status').value;
+        const res = await fetch(`/api/orders/${orderId}`);
+        const o = await res.json();
+        
+        let days = '3-5';
+        if (o.buyer_location === 'Pretoria') days = '1-2';
+        const expected = days + ' days';
+
+        await fetch(`/api/orders/${orderId}/track`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ status, expected_delivery: expected })
+        });
+        alert(`Updated! Expected delivery: ${expected}`);
+        window.location.href = 'Seller/clientorders.html';
+    }
+  </script>
+</body>
+</html>

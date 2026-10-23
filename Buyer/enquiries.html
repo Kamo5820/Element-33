@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <base href="/">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Enquiries — Eduvos Marketplace</title>
+  <link rel="stylesheet" href="css/buyer.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="wrap">
+      <a class="brand" href="Buyer/BuyerUI.html"><i>E</i>duvos Marketplace</a>
+      <nav class="nav">
+        <a href="Buyer/BuyerUI.html">Discover</a>
+        <a href="Buyer/saved.html">Saved</a>
+        <a href="Buyer/order-history.html">My Orders</a>
+        <a href="Buyer/enquiries.html" class="active">Enquiries</a>
+        <a href="Buyer/chat.html">Chat</a>
+      </nav>
+      <div class="account">
+        <a class="cart-pill" href="Buyer/cart.html">🛒 <span id="nav-cart-count">0</span></a>
+        <button class="btn ghost" id="logout">Log out</button>
+      </div>
+    </div>
+  </header>
+  <main class="wrap" style="padding-top: 40px; min-height: 70vh;">
+    <div class="panel fade-in" style="max-width: 800px; margin: 0 auto;">
+      <h2>Active Enquiries</h2>
+      <p class="meta" style="margin-bottom: 20px;">Click on a conversation to reply in the Chat tab.</p>
+      
+      <div id="enquiries-list">
+        <p class="meta">Redirecting you to your active chats...</p>
+      </div>
+    </div>
+  </main>
+  <script>
+    document.getElementById('logout').addEventListener('click', () => window.location.href = '/index.html');
+    setTimeout(() => window.location.href = 'Buyer/chat.html', 1500);
+  </script>
+</body>
+</html>

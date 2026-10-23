@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <base href="/">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Your Cart — Eduvos Marketplace</title>
+  <link rel="stylesheet" href="css/buyer.css">
+  <style>
+    .cart-row { display: flex; align-items: center; gap: 14px; padding: 16px 0; border-bottom: 1px solid var(--line); }
+    .cart-row:last-child { border-bottom: 0; }
+    .cart-row img { width: 70px; height: 70px; border-radius: var(--radius-sm); object-fit: cover; }
+    .cart-row strong { display: block; font-size: 15px; }
+    .qty { display: inline-flex; align-items: center; gap: 2px; border: 1px solid var(--line); border-radius: 999px; padding: 3px; }
+    .qty button { width: 30px; height: 30px; border-radius: 50%; font-size: 16px; font-weight: 600; color: var(--muted); background: none; border: none; cursor: pointer; }
+    .qty button:hover { background: var(--blue-soft); color: var(--blue); }
+    .qty span { min-width: 26px; text-align: center; font-weight: 600; }
+    .cart-row .x { width: 32px; height: 32px; border-radius: 50%; color: var(--muted); font-size: 18px; background: none; border: none; cursor: pointer; }
+    .cart-row .x:hover { background: #fff1f2; color: var(--red); }
+    .total { padding: 20px 0 10px; font-size: 16px; border-top: 1px solid var(--line); margin-top: 10px; display: flex; justify-content: space-between; }
+    .total strong { font-size: 24px; }
+    .cart-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
+    .cart-actions .btn.full { grid-column: 1 / -1; }
+  </style>
+</head>
+<body>
+<header class="topbar">
+  <div class="wrap">
+    <a class="brand" href="Buyer/BuyerUI.html"><i>E</i>duvos Marketplace</a>
+    <nav class="nav">
+      <a href="Buyer/BuyerUI.html">Discover</a>
+      <a href="Buyer/product.html">Products</a>
+      <a href="Buyer/saved.html">Saved</a>
+      <a href="Buyer/order-history.html">My Orders</a>
+      <a href="Buyer/enquiries.html">Enquiries</a>
+      <a href="Buyer/chat.html">Chat</a>
+    </nav>
+    <div class="account">
+      <a class="cart-pill" href="Buyer/cart.html">🛒 <span id="nav-cart-count">0</span></a>
+      <button class="btn ghost" id="logout">Log out</button>
+    </div>
+  </div>
+</header>
+<main class="wrap layout">
+  <div>
+    <section class="panel fade-in">
+      <div class="row-between">
+        <h2>Your Shopping Cart</h2>
+        <span class="meta" id="cart-label">0 items</span>
+      </div>
+      <div id="cart-items" style="margin-top: 10px;"></div>
+      <div class="total">
+        <span>Total</span><strong id="cart-total">R 0</strong>
+      </div>
+      <div class="cart-actions">
+        <button class="btn green" id="purchase" style="grid-column: 1 / -1; padding: 15px; font-size: 16px;">💳 Proceed to Payment</button>
+        <a class="btn primary full" href="Buyer/trackorder.html">🚚 Track order</a>
+      </div>
+    </section>
+  </div>
+  <aside>
+    <section class="panel fade-in">
+      <h3 style="margin-bottom: 12px; font-size: 16.5px;">Need Help?</h3>
+      <p class="meta" style="margin-bottom: 16px;">If you have an issue with checkout, contact support.</p>
+      <button class="btn ghost block">Help & Support</button>
+    </section>
+  </aside>
+</main>
+<footer class="footer">Eduvos Marketplace concept • Demo data only.</footer>
+<div id="toast" role="status" style="position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:var(--navy); color:#fff; padding:10px 20px; border-radius:8px; display:none; z-index:1000;"></div>
+<script>
+const money = n => 'R ' + n.toLocaleString();
+const store = {
+  get: (k, fallback) => JSON.parse(localStorage.getItem(k)) || fallback,
+  set: (k, v) => localStorage.setItem(k, JSON.stringify(v))
+};
+const Cart = {
+  all: () => store.get('eduvos_cart', []),
+  setQty: (id, qty) => {
+    let items = Cart.all();
+    if (qty <= 0) items = items.filter(i => i.id !== id);
+    else items.find(i => i.id === id).qty = qty;
+    store.set('eduvos_cart', items);
+  },
+  total: (products) => Cart.all().reduce((sum, i) => sum + (products.find(p => p.id == i.id)?.price || 0) * i.qty, 0),
+  clear: () => localStorage.removeItem('eduvos_cart')
+};
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.style.display = 'block';
+  setTimeout(() => t.style.display = 'none', 3000);
+}
+
+let productsDB = [];
+const cartBox = document.getElementById('cart-items');
+
+async function fetchProducts() {
+    try {
+        const res = await fetch('/api/products');
+        productsDB = await res.json();
+        renderCart();
+    } catch(e) { console.error(e); }
+}
+
+function renderCart() {
+  const items = Cart.all();
+  document.getElementById('nav-cart-count').textContent = items.reduce((s, i) => s + i.qty, 0);
+  document.getElementById('cart-label').textContent = items.length + ' item' + (items.length === 1 ? '' : 's');
+  document.getElementById('cart-total').textContent = money(Cart.total(productsDB));
+
+  cartBox.innerHTML = items.length ? items.map(i => {
+    const p = productsDB.find(p => p.id == i.id);
+    if (!p) return '';
+    return `
+      <div class="cart-row">
+        <img src="${p.image_url}" alt="">
+        <div style="flex:1;">
+          <strong>${p.title}</strong>
+          <div class="meta">${money(p.price)} each • Sold by ${p.first_name}</div>
+        </div>
+        <div class="qty">
+          <button data-qty="${p.id}" data-d="-1">−</button>
+          <span>${i.qty}</span>
+          <button data-qty="${p.id}" data-d="1">+</button>
+        </div>
+        <button class="x" data-del="${p.id}">×</button>
+      </div>`;
+  }).join('') : '<div style="text-align:center; padding: 40px 0;"><p class="meta" style="margin-bottom:16px;">Your cart is empty.</p><a href="Buyer/BuyerUI.html" class="btn primary sm">Start Shopping</a></div>';
+}
+
+cartBox.addEventListener('click', e => {
+  const q = e.target.closest('[data-qty]');
+  if (q) {
+    const row = Cart.all().find(i => i.id == q.dataset.qty);
+    Cart.setQty(q.dataset.qty, row.qty + Number(q.dataset.d));
+    return renderCart();
+  }
+  const del = e.target.closest('[data-del]');
+  if (del) { Cart.setQty(del.dataset.del, 0); renderCart(); toast('Removed from cart'); }
+});
+
+document.getElementById('purchase').addEventListener('click', async () => {
+  const items = Cart.all();
+  if (!items.length) return toast('Your cart is empty');
+  
+  const userId = localStorage.getItem('userId');
+  if (!userId) return toast('Please log in first.');
+
+  const payloadItems = items.map(i => {
+    const p = productsDB.find(x => x.id == i.id);
+    return {
+        product_id: p.id,
+        seller_id: p.seller_id,
+        quantity: i.qty,
+        price: p.price
+    };
+  });
+
+  try {
+    const res = await fetch('/api/orders', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ buyer_id: userId, items: payloadItems })
+    });
+    if(res.ok) {
+        Cart.clear();
+        renderCart();
+        toast('Payment Successful — Order created!');
+        setTimeout(() => location.href = 'Buyer/order-history.html', 1500);
+    } else {
+        toast('Payment failed');
+    }
+  } catch (e) {
+    toast('Server error during payment');
+  }
+});
+
+document.getElementById('logout').addEventListener('click', () => {
+  localStorage.clear();
+  window.location.href = '/index.html';
+});
+fetchProducts();
+</script>
+</body>
+</html>

@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <base href="/">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Buyer Dashboard — Eduvos Marketplace</title>
+  <link rel="stylesheet" href="css/buyer.css">
+  <style>
+    .video-banner { position: relative; width: 100%; height: 400px; overflow: hidden; background: var(--navy); }
+    .video-banner-slides { position: absolute; inset: 0; z-index: 0; }
+    .video-banner-slides video { position: absolute; top: 50%; left: 50%; min-width: 100%; min-height: 100%; width: auto; height: auto; transform: translate(-50%, -50%); object-fit: cover; opacity: 0; transition: opacity 1s; }
+    .video-banner-slides video.active { opacity: 1; z-index: 2; }
+    .video-banner-overlay { position: absolute; inset: 0; background: linear-gradient(to right, rgba(12, 22, 70, 0.85) 0%, rgba(12, 22, 70, 0.3) 100%); z-index: 5; pointer-events: none; }
+    .video-banner-content { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 10; width: 100%; max-width: 800px; text-align: center; padding: 0 20px; color: #fff; }
+    .video-banner h2 { font-size: clamp(32px, 5vw, 48px); font-weight: 800; line-height: 1.1; margin-bottom: 16px; letter-spacing: -1px; color: #fff; }
+    .video-banner p { font-size: 18px; color: rgba(255, 255, 255, 0.9); margin-bottom: 28px; }
+    .video-banner .btn { background: #fff; color: var(--blue); font-size: 15px; padding: 14px 28px; box-shadow: 0 8px 20px rgba(0,0,0,0.2); pointer-events: auto; border: none; cursor: pointer; }
+    .video-banner .btn:hover { background: var(--blue-soft); transform: translateY(-2px); }
+    .notif-container { font-size: 20px; display: flex; align-items: center; cursor: pointer; }
+    #notif-badge { position: absolute; top: -5px; right: -5px; background: #ef4444; color: #fff; border-radius: 50%; font-size: 10px; padding: 2px 6px; display: none; font-weight: bold; }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="wrap">
+      <a class="brand" href="Buyer/BuyerUI.html"><i>E</i>duvos Marketplace</a>
+      <nav class="nav">
+        <a href="Buyer/BuyerUI.html" class="active">Discover</a>
+        <a href="Buyer/product.html">Products</a>
+        <a href="Buyer/saved.html">Saved</a>
+        <a href="Buyer/order-history.html">My Orders</a>
+        <a href="Buyer/enquiries.html">Enquiries</a>
+        <a href="Buyer/chat.html">Chat</a>
+      </nav>
+      <div class="account" style="gap: 10px; position: relative;">
+        <div class="notif-container" id="notif-btn">🔔 <span id="notif-badge">0</span></div>
+        <a class="cart-pill" href="Buyer/cart.html">🛒 <span id="nav-cart-count">0</span></a>
+        <span class="meta" style="font-weight: 600; color: var(--blue);">Welcome, <span id="nav-username">User</span></span>
+        <button class="btn ghost" id="logout">Log out</button>
+      </div>
+    </div>
+  </header>
+  <section class="video-banner">
+    <div class="video-banner-slides" id="video-slider">
+      <video class="active" autoplay muted loop playsinline poster="https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&w=1600&q=80">
+        <source src="pictures/banner.mp4" type="video/mp4">
+      </video>
+    </div>
+    <div class="video-banner-overlay"></div>
+    <div class="video-banner-content">
+      <h2>Discover Your Campus Marketplace</h2>
+      <p>Buy, sell, and connect with student entrepreneurs. Find exactly what you need right here on campus.</p>
+      <a href="#recommended" class="btn smooth-scroll">Start Shopping</a>
+    </div>
+  </section>
+  <section class="hero">
+    <div class="wrap">
+      <h1>Hi <span id="hero-username">User</span> 👋</h1>
+      <p>Browse products, manage your cart and chat with sellers.</p>
+      <div class="search">
+        <input id="search" type="search" placeholder="Search products, services or sellers" aria-label="Search">
+        <select id="campus" aria-label="Choose campus">
+          <option>Pretoria</option><option>Midrand</option><option>Durban</option><option>Cape Town</option>
+        </select>
+      </div>
+      <div class="chips" id="chips">
+        <button class="chip on" data-cat="All">All</button>
+        <button class="chip" data-cat="Shop">Shop</button>
+        <button class="chip" data-cat="Services">Services</button>
+        <button class="chip" data-cat="Food & Drinks">Food & Drinks</button>
+        <button class="chip" data-cat="Fashion">Fashion</button>
+        <button class="chip" data-cat="Tutoring">Tutoring</button>
+        <button class="chip" data-cat="Tech & Study">Tech & Study</button>
+        <button class="chip" data-cat="Events">Events</button>
+      </div>
+    </div>
+  </section>
+  <main class="wrap layout">
+    <div>
+      <section class="panel fade-in" id="recommended">
+        <div class="row-between">
+          <h2>Recommended for you</h2>
+          <span class="meta" id="count">Loading...</span>
+        </div>
+        <div class="grid" id="products" style="margin-top:16px"></div>
+      </section>
+      <section class="panel fade-in" style="margin-top: 20px;">
+        <h2>About Us</h2>
+        <p class="meta" style="margin: 8px 0;">Eduvos Marketplace is a student-driven platform built to connect buyers and sellers across all campuses. Our mission is to empower student entrepreneurs by providing a safe, easy-to-use space to trade goods and services.</p>
+      </section>
+    </div>
+    <aside>
+      <section class="panel fade-in">
+        <h3>Your activity</h3>
+        <a class="activity" href="Buyer/saved.html"><span>♡ Saved items</span><strong id="saved-count">0</strong></a>
+        <a class="activity" href="Buyer/enquiries.html"><span>💬 Open enquiries</span><strong>2</strong></a>
+        <a class="activity" href="Buyer/chat.html"><span>🗨️ Messages</span><strong>1</strong></a>
+      </section>
+    </aside>
+  </main>
+  <script>
+    const userId = localStorage.getItem('userId');
+    const userName = localStorage.getItem('userName') || 'Buyer';
+    
+    document.getElementById('nav-username').textContent = userName;
+    document.getElementById('hero-username').textContent = userName;
+
+    let allProducts = [];
+    
+    async function checkNotifications() {
+        if(!userId) return;
+        try {
+            const res = await fetch(`/api/notifications/${userId}`);
+            const data = await res.json();
+            const badge = document.getElementById('notif-badge');
+            if (data.length > 0) {
+                badge.textContent = data.length;
+                badge.style.display = 'block';
+            } else {
+                badge.style.display = 'none';
+            }
+        } catch(e) { console.error(e); }
+    }
+    setInterval(checkNotifications, 5000);
+    checkNotifications();
+
+    async function loadProducts() {
+        try {
+            const res = await fetch('/api/products');
+            allProducts = await res.json();
+            renderProducts();
+        } catch(e) { console.error(e); }
+    }
+
+    function renderProducts() {
+        const cat = document.querySelector('.chip.on')?.dataset.cat || 'All';
+        const filtered = cat === 'All' ? allProducts : allProducts.filter(p => p.cat === cat);
+        document.getElementById('count').textContent = filtered.length + ' items';
+        
+        document.getElementById('products').innerHTML = filtered.map(p => `
+            <article class="card">
+                <a href="Buyer/product.html?id=${p.id}"><img src="${p.image_url}" alt="${p.title}"></a>
+                <div class="body">
+                    <h4>${p.title}</h4>
+                    <span class="meta">${p.first_name} • ${p.cat}</span>
+                    <span class="price">R ${parseFloat(p.price).toLocaleString()}</span>
+                    <div class="card-btns">
+                        <button class="btn primary sm" onclick="addToCart('${p.id}')">Add to cart</button>
+                    </div>
+                </div>
+            </article>
+        `).join('');
+    }
+
+    document.querySelectorAll('.chip').forEach(btn => {
+        btn.onclick = () => {
+            document.querySelectorAll('.chip').forEach(b => b.classList.remove('on'));
+            btn.classList.add('on');
+            renderProducts();
+        };
+    });
+
+    function addToCart(id) {
+        let cart = JSON.parse(localStorage.getItem('eduvos_cart')) || [];
+        const existing = cart.find(i => i.id === id);
+        if (existing) existing.qty += 1; else cart.push({ id, qty: 1 });
+        localStorage.setItem('eduvos_cart', JSON.stringify(cart));
+        updateCartUI();
+    }
+
+    function updateCartUI() {
+        let cart = JSON.parse(localStorage.getItem('eduvos_cart')) || [];
+        document.getElementById('nav-cart-count').textContent = cart.reduce((s, i) => s + i.qty, 0);
+    }
+    updateCartUI();
+    loadProducts();
+
+    document.getElementById('logout').addEventListener('click', () => {
+        localStorage.clear();
+        window.location.href = '/index.html';
+    });
+  </script>
+</body>
+</html>

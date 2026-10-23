@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <base href="/">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Saved Items — Eduvos Marketplace</title>
+  <style>
+    :root { --blue: #0062e9; --blue-dark: #004fbd; --blue-soft: #e8f1ff; --green: #10b981; --green-dark: #059669; --red: #ef4444; --navy: #0c1646; --muted: #7581a3; --line: #e5edf6; --surface: #ffffff; --bg: #fcfdff; --radius-sm: 8px; --radius: 14px; --shadow-sm: 0 4px 12px rgba(33, 56, 101, 0.05); --shadow-md: 0 8px 24px rgba(33, 56, 101, 0.08); --shadow-lg: 0 16px 40px rgba(33, 56, 101, 0.12); --transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1); }
+    * { box-sizing: border-box; } html { scroll-behavior: smooth; } body { margin: 0; color: var(--navy); background: var(--bg); font-family: 'Inter', system-ui, sans-serif; font-size: 15px; line-height: 1.5; }
+    h1, h2, h3, h4 { margin: 0; letter-spacing: -0.6px; } p { margin: 0; } img { display: block; max-width: 100%; } a { color: inherit; text-decoration: none; } button, input, select { font: inherit; color: inherit; } button { cursor: pointer; border: 0; background: none; }
+    .wrap { max-width: 1240px; margin: 0 auto; padding: 0 4%; } .layout { display: grid; grid-template-columns: minmax(0, 1fr) 330px; gap: 24px; padding-top: 32px; padding-bottom: 48px; align-items: start; }
+    .row-between { display: flex; align-items: center; justify-content: space-between; gap: 12px; } .meta { color: var(--muted); font-size: 13px; } .grow { flex: 1; min-width: 0; }
+    .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; border-radius: var(--radius-sm); padding: 11px 18px; font-size: 13.5px; font-weight: 600; transition: all var(--transition); white-space: nowrap; }
+    .btn:hover { transform: translateY(-1px); } .btn.primary { background: var(--blue); color: #fff; box-shadow: 0 4px 14px rgba(0, 98, 233, 0.28); } .btn.primary:hover { background: var(--blue-dark); }
+    .btn.ghost { background: var(--surface); color: var(--navy); border: 1px solid var(--line); } .btn.ghost:hover { border-color: var(--blue); color: var(--blue); }
+    .btn.block { width: 100%; } .topbar { position: sticky; top: 0; z-index: 100; background: var(--surface); border-bottom: 1px solid var(--line); }
+    .topbar .wrap { display: flex; align-items: center; gap: 32px; min-height: 68px; } .brand { display: inline-flex; align-items: baseline; gap: 2px; font-size: 20px; font-weight: 800; white-space: nowrap; }
+    .brand i { font-style: normal; font-size: 30px; font-weight: 900; color: var(--blue); line-height: 1; } .nav { display: flex; gap: 4px; align-self: stretch; flex-wrap: wrap; }
+    .nav a { position: relative; display: inline-flex; align-items: center; padding: 10px 12px; font-size: 14px; font-weight: 500; color: var(--muted); border-radius: var(--radius-sm); transition: color var(--transition); }
+    .nav a:hover, .nav a.active { color: var(--blue); } .nav a::after { content: ''; position: absolute; left: 50%; bottom: 4px; width: 0; height: 3px; background: var(--blue); border-radius: 3px; transform: translateX(-50%); transition: width var(--transition); }
+    .nav a:hover::after, .nav a.active::after { width: 60%; } .account { margin-left: auto; display: flex; align-items: center; gap: 14px; }
+    .cart-pill { display: inline-flex; align-items: center; gap: 7px; padding: 9px 14px; border-radius: 999px; background: var(--blue-soft); color: var(--blue); font-weight: 600; } .cart-pill:hover { transform: translateY(-1px); }
+    .panel { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 22px; box-shadow: var(--shadow-sm); } .panel + .panel { margin-top: 20px; }
+    .panel h2 { font-size: 22px; } .panel h3 { font-size: 16.5px; margin-bottom: 14px; } .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 18px; }
+    aside { display: flex; flex-direction: column; gap: 20px; } .activity { display: flex; align-items: center; gap: 12px; padding: 12px 0; font-size: 14px; border-top: 1px solid var(--line); } .activity:first-of-type { border-top: 0; padding-top: 0; }
+    .activity strong { margin-left: auto; background: var(--blue-soft); color: var(--blue); font-size: 12px; padding: 2px 9px; border-radius: 999px; } .footer { padding: 28px 4% 40px; text-align: center; color: var(--muted); font-size: 12.5px; border-top: 1px solid var(--line); }
+    .fade-in { opacity: 0; transform: translateY(30px); transition: opacity 0.6s ease-out, transform 0.6s ease-out; will-change: opacity, transform; } .fade-in.visible { opacity: 1; transform: translateY(0); }
+    @media (max-width: 820px) { .topbar .wrap { flex-wrap: wrap; padding-top: 10px; padding-bottom: 10px; } .nav { order: 3; width: 100%; overflow-x: auto; padding-bottom: 4px; } .nav a { white-space: nowrap; } .layout { grid-template-columns: 1fr; } aside { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); } aside > :last-child { grid-column: 1 / -1; } }
+    @media (max-width: 560px) { .grid { grid-template-columns: repeat(2, 1fr); gap: 12px; } aside { grid-template-columns: 1fr; } aside > :last-child { grid-column: auto; } }
+    .card { display: flex; flex-direction: column; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; transition: transform var(--transition); }
+    .card:hover { transform: translateY(-4px); box-shadow: var(--shadow-md); }
+    .card > a, .card img { display: block; width: 100%; height: 170px; object-fit: cover; background: var(--line); }
+    .card .body { display: flex; flex-direction: column; gap: 4px; padding: 14px 16px 16px; flex: 1; }
+    .card h4 { font-size: 15px; } .card .price { font-size: 18px; font-weight: 700; margin-top: 2px; }
+    .card-btns { display: flex; gap: 8px; margin-top: 12px; }
+    .card-btns .btn { flex: 1; }
+  </style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="wrap">
+    <a class="brand" href="Buyer/BuyerUI.html"><i>E</i>duvos Marketplace</a>
+    <nav class="nav">
+      <a href="Buyer/BuyerUI.html">Discover</a>
+      <a href="Buyer/product.html">Products</a>
+      <a href="Buyer/saved.html" class="active">Saved</a>
+      <a href="Buyer/order-history.html">My Orders</a>
+      <a href="Buyer/enquiries.html">Enquiries</a>
+      <a href="Buyer/chat.html">Chat</a>
+    </nav>
+    <div class="account">
+      <a class="cart-pill" href="Buyer/BuyerUI.html#cart">🛒 <span id="nav-cart-count">0</span></a>
+      <button class="btn ghost" id="logout">Log out</button>
+    </div>
+  </div>
+</header>
+
+<main class="wrap layout">
+  <div>
+    <section class="panel fade-in">
+      <h2>Your Saved Items</h2>
+      <p class="meta" style="margin: 8px 0 20px;">Keep track of products you love.</p>
+      <div class="grid" id="saved-grid"></div>
+    </section>
+  </div>
+
+  <aside>
+    <section class="panel fade-in">
+      <h3>Quick Links</h3>
+      <a class="activity" href="Buyer/BuyerUI.html"><span>🏠 Back to Discover</span></a>
+      <a class="activity" href="Buyer/order-history.html"><span>📦 Order History</span></a>
+    </section>
+  </aside>
+</main>
+
+<footer class="footer">Eduvos Marketplace concept • Demo data only.</footer>
+<div id="toast" role="status"></div>
+
+<script>
+  const PRODUCTS = [
+    { id: 'p1', name: 'Campus Hoodie', cat: 'Clothing', price: 320, seller: 'Thandi Creates', img: 'https://images.unsplash.com/photo-1556821840-3a63f95609a7?auto=format&fit=crop&w=400&q=80' },
+    { id: 'p2', name: 'Handmade Tote', cat: 'Accessories', price: 180, seller: 'Thandi Creates', img: 'https://images.unsplash.com/photo-1590874103328-eac38a683ce7?auto=format&fit=crop&w=400&q=80' },
+    { id: 'p3', name: 'Gourmet Lunch', cat: 'Food', price: 85, seller: 'Campus Bites', img: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=400&q=80' }
+  ];
+
+  let savedIds = JSON.parse(localStorage.getItem('eduvos_saved')) || [];
+  const grid = document.getElementById('saved-grid');
+
+  function renderSaved() {
+    if (savedIds.length === 0) {
+      grid.innerHTML = '<p class="meta" style="padding:18px 0">You haven\'t saved any items yet.</p>';
+      return;
+    }
+
+    grid.innerHTML = savedIds.map(id => {
+      const p = PRODUCTS.find(x => x.id === id);
+      if (!p) return '';
+      return `
+        <article class="card">
+          <a href="Buyer/product.html?id=${p.id}"><img src="${p.img}" alt="${p.name}"></a>
+          <div class="body">
+            <h4>${p.name}</h4>
+            <span class="meta">${p.seller}</span>
+            <span class="price">R ${p.price}</span>
+            <div class="card-btns">
+              <button class="btn primary sm" onclick="window.location.href='Buyer/product.html?id=${p.id}'">View Item</button>
+              <button class="btn ghost sm" onclick="removeSaved('${p.id}')" title="Remove">×</button>
+            </div>
+          </div>
+        </article>`;
+    }).join('');
+  }
+
+  window.removeSaved = (id) => {
+    savedIds = savedIds.filter(x => x !== id);
+    localStorage.setItem('eduvos_saved', JSON.stringify(savedIds));
+    renderSaved();
+  };
+
+  renderSaved();
+
+  document.getElementById('nav-cart-count').textContent = (JSON.parse(localStorage.getItem('eduvos_cart')) || []).reduce((s, i) => s + i.qty, 0);
+  document.getElementById('logout').addEventListener('click', () => window.location.href = '/index.html');
+  
+  document.querySelectorAll('.fade-in').forEach(el => setTimeout(() => el.classList.add('visible'), 100));
+</script>
+</body>
+</html>
